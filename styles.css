@@ -44,3 +44,27 @@ body.light .sensor-chip small,body.light .sensor-summary small,body.light .flow-
 @media(max-width:850px){.sensor-toolbar{grid-template-columns:1fr 1fr}.sensor-toolbar label:nth-of-type(2){grid-column:1}.sensor-toolbar input[type=range]{grid-column:2}.sensor-chips{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:560px){.sensor-chips{grid-template-columns:repeat(2,minmax(0,1fr))}.sensor-summary{grid-template-columns:1fr 1fr}.sensor-summary>div:last-child{grid-column:1/-1}.sensor-toolbar{grid-template-columns:1fr}.sensor-toolbar input[type=range],.sensor-toolbar label:nth-of-type(2){grid-column:1}.diagnostics{padding:12px}.diagnostics-head{flex-direction:column}.trend-area{height:280px}.diagram-card .card-head #diagramFitBtn{margin-left:0}.flow-readouts{gap:8px}.sensor-chip strong{font-size:14px}}
 @media(max-width:380px){.sensor-chips{grid-template-columns:1fr 1fr}.sim-timer{grid-template-columns:1fr 1fr}.sim-timer>div:first-child{grid-column:1/-1}}
+
+/* V2.1 · balanço de massa do fundo, seletor de hipóteses e gráfico de nível */
+.balance-diagnostics{border-color:#4b745e;background:rgba(11,41,31,.30)}
+.balance-selector{display:grid;gap:6px;margin-top:16px}.balance-selector label{font-size:12px;color:var(--muted);font-weight:700}
+.balance-selector select{width:100%;max-width:680px;min-width:0;padding:11px;border:1px solid var(--edge);border-radius:10px;background:var(--surface2);color:var(--text)}
+.balance-readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 10px}
+.balance-readouts>div{min-width:0;border:1px solid var(--edge);border-radius:10px;padding:12px;background:rgba(10,31,47,.55)}
+.balance-readouts small{display:block;font-size:10px;color:var(--muted)}
+.balance-readouts strong{display:block;font-size:25px;line-height:1.5;font-variant-numeric:tabular-nums}
+.balance-neg{color:#ffae93}.balance-pos{color:#8fe5d3}.balance-neutral{color:#efd089}
+.balance-direction{font-size:14px;font-weight:750;margin:8px 0!important;color:var(--text)}
+.balance-trend{max-width:680px;padding:12px;background:rgba(9,31,44,.45);border-radius:12px;margin:12px 0}
+.balance-trend h4{font-size:13px;margin-bottom:8px;color:var(--text)}
+.balance-trend svg{width:100%;height:auto;max-height:210px;display:block}
+.balance-alert{margin:14px 0 0!important;border-left:3px solid #d9b076;padding:8px 12px;font-size:12px;color:var(--muted);background:rgba(207,171,113,.07);line-height:1.65}
+body.light .balance-diagnostics{background:#edf7ed}
+body.light .balance-readouts>div,body.light .balance-trend{background:#fff}
+body.light .balance-neg{color:#ad4d37}body.light .balance-pos{color:#087462}body.light .balance-neutral{color:#92721c}
+@media(max-width:560px){.balance-readouts{gap:6px}.balance-readouts>div{padding:8px}.balance-readouts strong{font-size:17px}.balance-readouts small{font-size:8px}}
+
+/* V2.2 — tendência dominante de queda LIC-39152, responsividade da explicação */
+.balance-selector{border:1px solid var(--edge);border-radius:10px;padding:12px 13px;line-height:1.6;color:var(--muted);font-size:13px}
+.balance-selector strong{color:var(--text)}
+.balance-selector .micro-label{display:block;margin-top:8px;letter-spacing:.04em}

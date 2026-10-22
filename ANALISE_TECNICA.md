@@ -1,6 +1,6 @@
 # U-39 — Falha simultânea da J-3911A/B | Análise técnica do procedimento
 
-**Edição:** Concept V1.0, 22/10/2026. **Base documental:** imagem original do procedimento de 13 ações enviada para análise; Manual da Unidade 39, seção 8.7.2.1 (páginas 51–52), seção de integração de vapor (página 90), quadro de controle (página 136), descrições complementares (páginas 55, 56, 58, 59, 61 e 144).
+**Edição:** Análise revisada para Concept V2.2, 22/10/2026. **Base documental:** imagem original do procedimento de 13 ações enviada para análise; Manual da Unidade 39, seção 8.7.2.1 (páginas 51–52), seção de integração de vapor (página 90), quadro de controle (página 136), descrições complementares (páginas 55, 56, 58, 59, 61 e 144).
 
 ## 1. Situação iniciadora
 
@@ -12,7 +12,7 @@ O Manual informa que a borra é escoada do fundo da E-3901, via linha 39-192, à
 
 **Perda do circuito J-3911 → menor vazão de borra nos refluxos → redução simultânea da lavagem gás–líquido e da remoção de energia → potencial aumento de TIC-39186 e TIC-39180 → menor renovação/homogeneização do inventário pesado → risco de coqueamento, arraste de finos e deterioração do balanço térmico.**
 
-As temperaturas não têm de subir à mesma velocidade. A zona de flash responde à energia do efluente vindo do conversor e ao contato com o refluxo superior, enquanto a temperatura de fundo depende do inventário pesado, dos retornos inferiores e do tempo de residência. A direção e taxa de variação do nível do fundo não podem ser previstas somente pela parada da bomba: dependem do balanço entre líquidos condensados, saídas por outras rotas e vaporização.
+As temperaturas não têm de subir à mesma velocidade. A zona de flash responde à energia do efluente vindo do conversor e ao contato com o refluxo superior, enquanto a temperatura de fundo depende do inventário pesado, dos retornos inferiores e do tempo de residência. No cenário operacional relatado para a U-39, a perda simultânea dos refluxos superior e inferior causa **queda abrupta do nível LIC-39152**: há redução do molhamento e da condensação dos hidrocarbonetos pesados nas chicanas, uma parcela maior permanece como vapor ascendente e a falta de sub-resfriamento favorece vaporização do inventário quente do fundo. A tendência é de perda de inventário líquido, mesmo que a derivação de retirada pela J-3912 também fique comprometida. Essa interpretação da ocorrência específica não substitui fechamento quantitativo do balanço de massa, nem confirma uma taxa numérica de queda sem histórico de planta.
 
 ### Critérios térmicos
 
@@ -31,7 +31,7 @@ Vigiar a temperatura na zona de flash, as leituras individuais dos cinco termopa
 
 ### 02 · TIC-39180
 
-Monitorar o fundo simultaneamente. Sem FIC-39163 efetivo, há menor sub-resfriamento e homogeneização do líquido; a exposição a alta temperatura pode favorecer coqueamento e obstruções. O nível LIC-39152, a tendência de temperatura e o inventário precisam ser reconciliados.
+Monitorar o fundo simultaneamente. Sem FIC-39163 efetivo, há menor sub-resfriamento e homogeneização do líquido; a exposição a alta temperatura pode favorecer coqueamento e obstruções. Com falha também no FIC-39162, reduz-se a condensação de pesados na seção de chicanas e a queda rápida do LIC-39152 deve ser correlacionada com a elevação de temperatura. A taxa de declínio requer histórico real da unidade para ser quantificada.
 
 ### 03 · J-3903A/B
 
@@ -88,6 +88,12 @@ A fotografia indica desviar a J-3905 para pumpout leve via J-3919. O Manual asso
 7. Confirmar FIC-39163 no P&ID: a descrição do Manual (p. 52) o posiciona como retorno inferior, embora quadro p. 136 o chame de superior.
 8. Rever procedimentos associados a J-3910, J-3906, J-3905, J-3919, E-3908/09/10 e condições de pumpout.
 
-## 5. Alcance da Concept
+## 5. Por que o nível despenca na ocorrência observada
+
+O refluxo de borra **não adiciona massa ao sistema** por ser um circuito de recirculação: sua sucção e seu retorno se cancelam diretamente no balanço de massa da torre. Entretanto, ao retornar frio à seção de chicanas, permite condensar frações pesadas do efluente do conversor e conduzir esse líquido para o fundo. Quando os refluxos FIC-39162 e FIC-39163 desaparecem, a condensação diminui e o inventário quente pode vaporizar. Por consequência, o LIC-39152 perde nível rapidamente na falha descrita.
+
+O simulador V2.2 representa essa tendência de queda qualitativamente; seus valores em pontos percentuais por minuto **não são calibrados**. Uma indicação baseada em pressão diferencial pode também variar com densidade e temperatura, a depender da instrumentação instalada, ponto que requer confirmação no P&ID.
+
+## 6. Alcance da Concept
 
 A Concept contém modelos de tendência empíricos e simplificados destinados a demonstrar *relações qualitativas*. Não reproduz equações de balanço da planta calibradas, parâmetros reais de troca térmica, níveis de disparo de instrumentação, condição de inventário, matriz de intertravamento ou tempos reais de resposta. As simulações não podem fundamentar decisões reais de operação.
