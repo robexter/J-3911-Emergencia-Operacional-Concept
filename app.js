@@ -1,4 +1,4 @@
-/* J-3911 Emergência Concept — modelo didático isolado da planta real. */
+/* J-3911 Emergência Concept — modelo didático. */
 'use strict';
 const $=(s)=>document.querySelector(s); const $$=(s)=>[...document.querySelectorAll(s)];
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -23,7 +23,7 @@ $('#themeBtn').addEventListener('click',()=>{document.body.classList.toggle('lig
 let installPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;$('#installBtn').textContent='⇩ Instalar App'});$('#installBtn').addEventListener('click',async()=>{if(installPrompt){const e=installPrompt;installPrompt=null;await e.prompt();return;}showToast('Instalação: use o menu do navegador → Instalar app ou Adicionar à tela inicial. GitHub Pages precisa estar em HTTPS.')});
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 const procedure=[
-{n:1,category:'termica',title:'Monitorar TIC-39186 e refluxo pela HV-39157',original:'O controle (CIC), deve monitorar de forma contínua a temperatura da zona de flash (TIC-39186), que recebe como PV uma média de cinco termopares (TI’s-39186A/B/C/D/E), que não deve ultrapassar de 440°C por mais 5min, Tentar segurar esta temperatura com o refluxo de carga via HV-39157, atentar para o tempo estimado em relação ao nível do fundo.',mechanism:'A J-3911B parou e a reserva não entrou. Sem circulação de borra, diminui o retorno resfriado e a condensação dos pesados nas chicanas; os vapores ascendentes carregam frações que deixariam líquido no fundo, e o LIC-39152 cai. O refluxo alternativo indicado na foto pode proporcionar retirada temporária de calor, mas não substitui automaticamente a circulação normal. A média de cinco pontos atenua leituras individuais; uma zona local muito quente merece investigação.',watch:'TIC-39186, os cinco TI individualizados, FIC-39162/63, pressão e vazão da J-3911, nível LIC-39152, posição e disponibilidade efetiva da HV-39157.',risk:'Temperatura ascendente, menos lavagem de finos, coqueamento da seção inferior e menor capacidade de manter a integridade da fracionadora.',check:'Confirmar se 440 °C/5 min é apenas critério de procedimento ou também entrada de intertravamento; validar fonte, destino e capacidade da HV-39157.'},
+{n:1,category:'termica',title:'Monitorar TIC-39186 e refluxo pela HV-39157',original:'O controle (CIC), deve monitorar de forma contínua a temperatura da zona de flash (TIC-39186), que recebe como PV uma média de cinco termopares (TI’s-39186A/B/C/D/E), que não deve ultrapassar de 400°C por mais 5min, Tentar segurar esta temperatura com o refluxo de carga via HV-39157, atentar para o tempo estimado em relação ao nível do fundo.',mechanism:'A J-3911B parou e a reserva não entrou. Sem circulação de borra, diminui o retorno resfriado e a condensação dos pesados nas chicanas; os vapores ascendentes carregam frações que deixariam líquido no fundo, e o LIC-39152 cai. O refluxo alternativo indicado na foto pode proporcionar retirada temporária de calor, mas não substitui automaticamente a circulação normal. A média de cinco pontos atenua leituras individuais; uma zona local muito quente merece investigação.',watch:'TIC-39186, os cinco TI individualizados, FIC-39162/63, pressão e vazão da J-3911, nível LIC-39152, posição e disponibilidade efetiva da HV-39157.',risk:'Temperatura ascendente, menos lavagem de finos, coqueamento da seção inferior e menor capacidade de manter a integridade da fracionadora.',check:'Confirmar se 440 °C/5 min é apenas critério de procedimento ou também entrada de intertravamento; validar fonte, destino e capacidade da HV-39157.'},
 {n:2,category:'termica',title:'Monitorar TIC-39180 · Temperatura de fundo',original:'Em paralelo monitorar a temperatura do fundo TIC-39180 que não deverá atingir 370°C por mais de 7 min;',mechanism:'O circuito inferior deveria sub-resfriar e homogeneizar o líquido pesado. Sem a bomba, os produtos pesados permanecem sujeitos à energia do efluente do conversor e têm menor renovação, agravando o aquecimento e a propensão a coque.',watch:'TIC-39180, tendência, tempo de exposição, FIC-39163, nível, vaporização e eventual alteração de viscosidade/circulação.',risk:'Formação de coque, deposição, restrição de escoamento, pontos quentes e perda adicional de circulação.',check:'Verificar diferenciação entre temperatura de controle e temperatura máxima localizada, e a origem documental do tempo de 7 min.'},
 {n:3,category:'conversor',title:'Interromper J-3903A/B · Bombas de carga',original:'Em não conseguindo sucesso com o retorno da bomba e se aproximando dos valores e tempo citados acima, deveremos de imediato parar as bombas de carga Js3903 A/B;',mechanism:'A interrupção da carga corta a principal alimentação hidrocarboneto do riser; subsequentemente cai a geração de vapores quentes que entram na E-3901. O procedimento define esta resposta quando a circulação não foi restabelecida e os critérios se aproximam.',watch:'Status de carga, vazão total, sinais de intertravamento, TIC-39186/39180, pressão do reator e estabilidade dos circuitos de vapor.',risk:'Prolongar a alimentação agrava o desequilíbrio térmico; uma parada descoordenada pode provocar alterações abruptas de pressão e fluxo.',check:'Confirmar a lógica de redução/retirada de carga e as consequências de baixa vazão sobre os bicos e o vapor de dispersão.'},
 {n:4,category:'conversor',title:'Trip parcial · L-3901/L-3902 · J-3902',original:'O conversor irá para trip parcial, L-3901 e L-3902 irão fechar, parar o J-3902 e seguir o procedimento de bloqueio dos vapores do mesmo;',mechanism:'A redução da produção de gás e o isolamento do conversor exigem transição coordenada das slide valves e do compressor de gás úmido. O fechamento reduz intercâmbio de catalisador entre vasos conforme filosofia de proteção e diferenciais de pressão.',watch:'Posições L-3901/L-3902, diferencial de pressão reator/regenerador, condições de selo, compressor J-3902, pressão e destino de vapores.',risk:'Ações manuais fora da filosofia de intertravamento podem comprometer selagem, provocar fluxo reverso ou descontrole de pressão.',check:'Matriz causa e efeito, sequência automática, permissivos e procedimento de bloqueio de vapores são obrigatórios.'},
@@ -56,10 +56,10 @@ const fundamentals=[
 $('#fundamentals').innerHTML=fundamentals.map(([title,formula,body,link],i)=>`<article class="card fundamental"><span class="source-marker">CONCEITO ${String(i+1).padStart(2,'0')}</span><h3>${title}</h3><div class="equation">${formula}</div><p>${body}</p><div class="case-link">No CIC: ${link}</div></article>`).join('');
 const SIM_STEP_SEC=15;
 function estimateLevelBalance(){
- // BALANÇO DIDÁTICO, NÃO CALIBRADO. As vazões de sucção e retorno da J-3911
+ // BALANÇO DIDÁTICO. As vazões de sucção e retorno da J-3911
  // se anulam no inventário total; a falha reduz condensação e remoção de calor.
  // A resposta de FV-39164B e LV-39152 é apenas hipótese de um mesmo caminho
- // efetivo de retirada residual, cuja hidráulica requer P&ID atualizado.
+ // 
  const load=sim.load/100, active=!!flowFactor();
  const hv=sim.hvEffective;
  const remaining=clamp(sim.level/(sim.level+20)/(57/77),0,1);
@@ -98,7 +98,7 @@ function log(message,severity='info'){sim.logs.unshift({t:sim.elapsed,message,se
 function stepSim(dt){if(!sim.incident)return;const active=flowFactor();
  const heatFactor=sim.trip?0:sim.load/100;
  // Resposta gradual e hipotética da rota de emergência: comando ≠ vazão.
- // Constante de aproximação: apenas ilustração (não é o tempo real da HV).
+ // Constante de aproximação: apenas ilustração.
  const hvTarget=sim.hvAvailable?sim.hv/100:0;
  sim.hvEffective+= (hvTarget-sim.hvEffective)*clamp(dt/(90+dt),0,1);
  const effectiveAux=sim.trip?sim.hvEffective*.2:sim.hvEffective;
@@ -116,7 +116,7 @@ function stepSim(dt){if(!sim.incident)return;const active=flowFactor();
  sim.elapsed+=dt;
  if(flashMean()>440)sim.overf+=dt;else sim.overf=0;
  if(sim.tb>=370)sim.overb+=dt;else sim.overb=0;
- if(sim.overf>=300&&!sim.thresholdf){sim.thresholdf=true;log('Exposição flash >440 °C alcançou 5 min no modelo. Referenciar procedimento vigente.', 'danger')}
+ if(sim.overf>=300&&!sim.thresholdf){sim.thresholdf=true;log('Exposição flash >400 °C alcançou 5 min no modelo. Referenciar procedimento vigente.', 'danger')}
  if(sim.overb>=420&&!sim.thresholdb){sim.thresholdb=true;log('Exposição fundo ≥370 °C alcançou 7 min no modelo. Referenciar procedimento vigente.','danger')}
  sim.history.push({t:sim.elapsed,tf:flashMean(),tb:sim.tb,level:sim.level});if(sim.history.length>165)sim.history.shift();updateView()
 }
