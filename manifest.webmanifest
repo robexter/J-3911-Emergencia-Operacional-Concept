@@ -1,7 +1,7 @@
 {
-  "name": "J-3911 — Emergência Operacional Concept V2.3",
-  "short_name": "J-3911 CIC",
-  "description": "Concept V2.3: emergência J-3911A/B com diagnóstico de circulação, cinco TI, simulador, 13 ações e cenários CIC",
+  "name": "J-3911 — Emergência Operacional Concept ",
+  "short_name": "J-3911 Emergencia",
+  "description": "Emergência J-3911A/B com diagnóstico de circulação, cinco TI, simulador, 13 ações e cenários CIC",
   "lang": "pt-BR",
   "id": "./",
   "start_url": "./index.html",
