@@ -11,7 +11,7 @@
 - PWA com cache V2 e instruções de fontes, incluindo limites do modelo didático.
 - A V1 permanece preservada em diretório separado.
 
-**Limites:** parâmetros dinâmicos, vazões relativas e desvios artificiais não representam calibração real. Os critérios 440°C/5 min e 370°C/7 min têm origem na fotografia; matriz de intertravamentos e capacidade da HV-39157 ainda requerem documentação atualizada para validação operacional.
+**Limites:** parâmetros dinâmicos, vazões relativas e desvios artificiais não representam calibração real. Os critérios 400°C/5 min e 370°C/7 min têm origem na fotografia; matriz de intertravamentos e capacidade da HV-39157 ainda requerem documentação atualizada para validação operacional.
 
 ## V2.1 — Correção da tendência do nível LIC-39152
 - Retirada a regra fixa `dNível = +0,42 p.p./min` com carga e sem pumpout.
