@@ -1,0 +1,29 @@
+J-3911 Emergência Operacional Concept — V2.4 (24/10/2026)
+
+ATUALIZAÇÃO SOLICITADA
+TIC-39186: critério de exposição superior a 400 °C, 5 minutos consecutivos.
+Critério anterior da simulação: superior a 440 °C.
+TIC-39180: 370 °C, 7 minutos (inalterado).
+
+ARQUIVOS PARA SUBSTITUIR NO REPOSITÓRIO
+1) index.html
+2) app.js
+3) sw.js
+
+Destinação: https://github.com/robexter/J-3911-Emergencia-Operacional-Concept (branch main)
+Substituir exatamente os três arquivos na raiz; os demais devem permanecer intactos.
+O GitHub não permitiu escrita automatizada nesta conversa (403). Esta entrega não está publicada.
+
+ABRANGÊNCIA
+- Textos, limites, contagem de 5 min, sinalização de alerta e gráficos sincronizados em 400 °C.
+- Referência inicial da simulação e todos os exemplos numéricos da zona de flash ajustados em -40 °C,
+  preservando a relação com o antigo limiar. O fundo e demais variáveis permanecem intactos.
+- Quatro cenários CIC, explicação da média dos termopares e avaliação atualizados.
+- Cache PWA com nome novo para sinalizar a atualização após publicação.
+- Faixa de referência do Manual (330–420 °C) não foi confundida com o critério de
+  emergência didático (400 °C), que passa a ter prioridade.
+
+RESTRIÇÃO
+Simulação didática, não substitui procedimento aprovado, matriz de causa e efeito ou SDCD real.
+O mecanismo do contador continua baseado em período de exposição consecutivo.
+Arquivo de imagem do procedimento original não foi alterado.
