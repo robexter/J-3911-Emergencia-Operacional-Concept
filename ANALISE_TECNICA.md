@@ -18,7 +18,7 @@ As temperaturas não têm de subir à mesma velocidade. A zona de flash responde
 
 | Variável | Faixa registrada no Manual U-39 | Critério registrado na fotografia |
 |---|---:|---:|
-| TIC-39186, zona de flash | 330–420 °C | 440 °C por 5 min |
+| TIC-39186, zona de flash | 330–420 °C | 400 °C por 5 min |
 | TIC-39180, fundo E-3901 | 320–365 °C | 370 °C por 7 min |
 
 A fotografia informa PV da TIC-39186 como média de TI-39186A/B/C/D/E. Uma média de cinco temperaturas pode mascarar um ponto individualmente mais quente. Os tempos são critérios citados pela fonte, não uma autorização para aguardar o esgotamento dessa exposição. Não há evidência nesta documentação de que sejam necessariamente temporizadores implementados como trip no DCS; essa informação deve ser conferida na matriz de causa e efeito.
