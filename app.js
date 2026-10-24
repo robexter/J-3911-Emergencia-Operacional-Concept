@@ -50,51 +50,46 @@ const fundamentals=[
 ['Instrumentação da zona de flash','PV = (TI_A + TI_B + TI_C + TI_D + TI_E) / 5','Segundo a fotografia, o TIC-39186 utiliza a média de cinco termopares. A média melhora a representação global, mas esconde um ponto quente: com quatro leituras de 430 °C e uma de 475 °C, por exemplo, a média é 439 °C. A veracidade da lógica deve ser confrontada com a configuração do SDCD.','É importante verificar dispersão entre os cinco sinais, falhas, saturação e critérios de seleção/validação.'],
 ['Controle alternativo pela HV-39157','Capacidade térmica ≈ ṁ_alt · cp · (T_quente − T_alt)','O refluxo alternativo da foto é uma tentativa de reduzir o aquecimento, não evidência de que exista capacidade suficiente para operar normalmente. Sua efetividade depende de vazão de fato entregue, posição de válvulas, destino na torre e diferença térmica. O nível de fundo também restringe a alternativa.','Nunca inferir que abertura de uma HV equivale a vazão medida ou redução térmica imediata.'],
 ['Integração conversor–fracionadora–gás','Trip parcial → nova condição de massa, energia e pressão','Retirar carga altera simultaneamente vapores à E-3901, circulação de catalisador, geração de gás úmido, ar de regeneração, gases de combustão e produção/uso de vapor. Por isso as ações 3–9 precisam de sequência coordenada pela filosofia do sistema e pelos procedimentos de máquinas.','O fechamento de L-3901/L-3902 e a transferência de catalisador apresentam dependências a conferir.'],
-['Balanço de massa e nível de fundo','dM_fundo/dt = Σṁ_entrada − Σṁ_saída','Na condição de falha total da J-3911 descrita para a U-39, a perda dos refluxos FIC-39162/63 reduz drasticamente o contato térmico e a condensação de frações pesadas no conjunto de chicanas. Mais hidrocarbonetos permanecem no vapor ascendente e o inventário já quente pode vaporizar: o LIC-39152 apresenta queda rápida. A retirada e o retorno de uma recirculação interna se cancelam diretamente no balanço; é a alteração de fase e do retorno de condensado que explica a queda. A origem real da HV-39157 e efeitos na medição por densidade devem ser conferidos. As taxas da simulação são ilustrativas, não valores de planta.','O gráfico de nível desta Concept é uma variável ilustrativa, não projeção do LIC-39152 real.'],
+['Balanço de massa e nível de fundo','dM_fundo/dt = Σṁ_entrada − Σṁ_saída','Na condição de falha total da J-3911 descrita para a U-39, a perda dos refluxos FIC-39162/63 reduz drasticamente o contato térmico e a condensação de frações pesadas no conjunto de chicanas. Mais hidrocarbonetos permanecem no vapor ascendente e o inventário já quente pode vaporizar: o LIC-39152 apresenta queda rápida. A retirada e o retorno de uma recirculação interna se cancelam diretamente no balanço; é a alteração de fase e do retorno de condensado que explica a queda. A origem real da HV-39157 e efeitos na medição por densidade devem ser conferidos. As taxas da simulação são ilustrativas, não valores de planta.','Na V2.3 o nível cai progressivamente e pode desacelerar por contenção térmica da HV-39157 e diminuição de retirada residual via J-3912/FV/LV, mas não é restaurado pelas ações isoladas. As três tags de retirada são representadas como restrições da mesma rota até confirmação do P&ID, evitando dupla contagem.'],
 ['Vapor e recuperação de energia','Calor da borra → V12 / Calor de combustão → GV-3901','A borra recupera calor em pré-aquecimento de carga e geração de vapor de média pressão. Em outra rede, gases de combustão passam pelo sistema de recuperação GV-3901 e o vapor dos catcoolers exige destino compatível. Esses circuitos se acoplam no balanço geral de energia.','Conferir suprimento de água, chama e roteamento de vapor. A foto não fornece permissivos de caldeira.']
 ];
 $('#fundamentals').innerHTML=fundamentals.map(([title,formula,body,link],i)=>`<article class="card fundamental"><span class="source-marker">CONCEITO ${String(i+1).padStart(2,'0')}</span><h3>${title}</h3><div class="equation">${formula}</div><p>${body}</p><div class="case-link">No CIC: ${link}</div></article>`).join('');
 const SIM_STEP_SEC=15;
 function estimateLevelBalance(){
- // Cenário operacional específico da U-39 descrito pelo operador:
- // perda simultânea dos retornos FIC-39162/63 reduz o molhamento e a
- // condensação de pesados na seção de chicanas; o líquido quente tende
- // a vaporizar e o inventário do fundo cai rapidamente (LIC-39152).
- // IMPORTANTE: pontos percentuais de nível/minuto são parâmetros
- // DIDÁTICOS arbitrários e não estimativas de desempenho da unidade.
- // A circulação interna J-3911 sai e retorna ao mesmo inventário:
- // por si só, as duas vazões se cancelam no balanço de massa da torre.
+ // BALANÇO DIDÁTICO, NÃO CALIBRADO. As vazões de sucção e retorno da J-3911
+ // se anulam no inventário total; a falha reduz condensação e remoção de calor.
+ // A resposta de FV-39164B e LV-39152 é apenas hipótese de um mesmo caminho
+ // efetivo de retirada residual, cuja hidráulica requer P&ID atualizado.
  const load=sim.load/100, active=!!flowFactor();
- let condensation=0, evaporation=0, product=0;
+ const hv=sim.hvEffective;
+ const remaining=clamp(sim.level/(sim.level+20)/(57/77),0,1);
+ const path=sim.residualFlow && sim.j3912Running ? 1 : 0;
+ const withdrawalFactor=path * (sim.fv39164b/100) * (sim.lv39152/100);
+ let condensation,evaporation,product,pumpout,stockFactor;
  if(active){
-   condensation=.66*load; // retorno líquido estabelecido
-   evaporation=.14*load;
-   product=.52*load; // retirada normal hipotética (J-3912)
- }else if(sim.trip){
-   condensation=0;
-   evaporation=.22+Math.max(0,sim.tb-348)*.006; // calor residual
-   product=0; // derivação sem circulação J-3911 não presumida
- }else if(sim.chargeStopped){
-   condensation=0;
-   evaporation=.72+Math.max(0,sim.tb-348)*.011; // persistência térmica
-   product=0;
+   stockFactor=1;
+   condensation=.68*load;
+   evaporation=.18*load;
+   product=.50*load*withdrawalFactor;
+   pumpout=sim.pumpout?1.00:0;
  }else{
-   condensation=.20*load; // grande perda da condensação por refluxo
-   evaporation=2.72*load+Math.max(0,sim.tb-348)*.020;
-   product=0;
+   // Perda progressiva da capacidade de evaporar/drenar conforme o inventário
+   // disponível diminui. Não é garantia física de nível mínimo de segurança.
+   stockFactor=remaining;
+   condensation=stockFactor*(.09*load+.035*load*hv);
+   evaporation=stockFactor*(.16+.47*load+Math.max(0,sim.tb-348)*.004)*(1-.54*hv);
+   product=stockFactor*.27*withdrawalFactor;
+   pumpout=stockFactor*(sim.pumpout?1.00:0);
  }
- // A HV-39157 é representada como entrada de líquido apenas se houver
- // disponibilidade real. Posição de válvula não comprova vazão.
- // O efeito didático da HV é insuficiente para anular a queda enquanto
- // carga prossegue e ambos os refluxos de borra estão indisponíveis.
- const externalHV=(sim.hvAvailable?sim.hv/100:0)*.55*(sim.trip?.15:1);
- const pumpout=sim.pumpout?1.25:0;
- const input=condensation+externalHV;
- const output=evaporation+product+pumpout;
- return {input,output,net:input-output,condensation,externalHV,evaporation,product,pumpout};
+ // A HV é uma intervenção prioritariamente térmica. Não supor que sua
+ // abertura acrescenta diretamente massa líquida ao fundo da torre.
+ const input=condensation,output=evaporation+product+pumpout;
+ const net=input-output;
+ return {input,output,net,condensation,evaporation,product,pumpout,stockFactor,
+   hvEffective:hv,withdrawalFactor,flowConfirmed:!!sim.residualFlow};
 }
 
-function initialState(){return {elapsed:0,tf:407,tb:348,level:57,levelBalance:{input:0,output:0,net:0},load:100,hv:0,hvAvailable:true,jb:true,ja:false,hydraulicFault:false,pumpout:false,incident:false,chargeStopped:false,trip:false,logs:[],overf:0,overb:0,history:[{t:0,tf:407,tb:348,level:57}],recovered:false,thresholdf:false,thresholdb:false,sensors:[0,0,0,0,0]}}
+function initialState(){return {elapsed:0,tf:407,tb:348,level:57,levelBalance:{input:0,output:0,net:0},load:100,hv:0,hvEffective:0,hvAvailable:true,j3912Running:true,residualFlow:true,fv39164b:100,lv39152:100,jb:true,ja:false,hydraulicFault:false,pumpout:false,incident:false,chargeStopped:false,trip:false,logs:[],overf:0,overb:0,history:[{t:0,tf:407,tb:348,level:57}],recovered:false,thresholdf:false,thresholdb:false,sensors:[0,0,0,0,0]}}
 const flowFactor=()=>((sim.jb||sim.ja)&&!sim.hydraulicFault)?1:0;
 const sensorVals=()=>sim.sensors.map(x=>sim.tf+x);
 const flashMean=()=>sensorVals().reduce((a,b)=>a+b,0)/5;
@@ -102,10 +97,13 @@ let sim=initialState();let interval=null;
 function log(message,severity='info'){sim.logs.unshift({t:sim.elapsed,message,severity});sim.logs=sim.logs.slice(0,11);const box=$('#simLog');box.innerHTML=sim.logs.map(o=>`<div class="log-row ${o.severity==='danger'?'danger':''}"><time>${fmtTime(o.t)}</time><span>${o.message}</span></div>`).join('')}
 function stepSim(dt){if(!sim.incident)return;const active=flowFactor();
  const heatFactor=sim.trip?0:sim.load/100;
- const aux=sim.hvAvailable?sim.hv/100:0;
- const effectiveAux=sim.trip?aux*.2:aux;
- const dFlash=(!active?7.1*heatFactor:0)+(407-sim.tf)*.16-3.8*effectiveAux-(sim.trip?3.7:0);
- const dBottom=(!active?4.8*heatFactor:0)+(348-sim.tb)*.11-1.25*effectiveAux-(sim.trip?2.4:0);
+ // Resposta gradual e hipotética da rota de emergência: comando ≠ vazão.
+ // Constante de aproximação: apenas ilustração (não é o tempo real da HV).
+ const hvTarget=sim.hvAvailable?sim.hv/100:0;
+ sim.hvEffective+= (hvTarget-sim.hvEffective)*clamp(dt/(90+dt),0,1);
+ const effectiveAux=sim.trip?sim.hvEffective*.2:sim.hvEffective;
+ const dFlash=(!active?7.1*heatFactor:0)+(407-sim.tf)*.16-6.5*effectiveAux-(sim.trip?3.7:0);
+ const dBottom=(!active?4.8*heatFactor:0)+(348-sim.tb)*.11-2.8*effectiveAux-(sim.trip?2.4:0);
  sim.tf=clamp(sim.tf+dFlash*dt/60,280,485);sim.tb=clamp(sim.tb+dBottom*dt/60,275,420);
  // Balanço DIDÁTICO de volume: recirculação interna J-3911 (sucção + retorno)
  // se cancela no inventário global. Sua perda altera condensação/vaporização e
@@ -122,15 +120,15 @@ function stepSim(dt){if(!sim.incident)return;const active=flowFactor();
  if(sim.overb>=420&&!sim.thresholdb){sim.thresholdb=true;log('Exposição fundo ≥370 °C alcançou 7 min no modelo. Referenciar procedimento vigente.','danger')}
  sim.history.push({t:sim.elapsed,tf:flashMean(),tb:sim.tb,level:sim.level});if(sim.history.length>165)sim.history.shift();updateView()
 }
-function updateView(){const normal=!!flowFactor();const label=!sim.incident?'● Condição nominal':sim.trip?'● Trip parcial simulado':normal?'● Vazão de borra restabelecida':'● Perda de circulação de borra';$('#simState').textContent=label;$('#simState').classList.toggle('fault',sim.incident&&!normal);
- $('#flashNum').textContent=flashMean().toFixed(1).replace('.',',')+' °C';$('#bottomNum').textContent=sim.tb.toFixed(1).replace('.',',')+' °C';$('#levelNum').textContent=sim.level.toFixed(1).replace('.',',')+' %';$('#levelFlag').textContent=!sim.incident?'Condição normal simulada':(sim.incident&&!normal&&!sim.chargeStopped?'↘ Queda rápida · refluxos perdidos':sim.levelBalance.net<-.05?'↘ Nível em redução':'Inventário estabilizado no exercício');
+function updateView(){sim.levelBalance=estimateLevelBalance();const normal=!!flowFactor();const label=!sim.incident?'● Condição nominal':sim.trip?'● Trip parcial simulado':normal?'● Vazão de borra restabelecida':'● Perda de circulação de borra';$('#simState').textContent=label;$('#simState').classList.toggle('fault',sim.incident&&!normal);
+ $('#flashNum').textContent=flashMean().toFixed(1).replace('.',',')+' °C';$('#bottomNum').textContent=sim.tb.toFixed(1).replace('.',',')+' °C';$('#levelNum').textContent=sim.level.toFixed(1).replace('.',',')+' %';$('#levelFlag').textContent=!sim.incident?'Condição normal simulada':sim.levelBalance.net<-.45?'↘ Queda acentuada':sim.levelBalance.net<-.16?'↘ Queda moderada':sim.levelBalance.net<-.025?'↘ Queda desacelerando':'→ Tendência quase estabilizada';
  const fwarn=flashMean()>420,bwarn=sim.tb>365;
  $('#flashFlag').textContent=flashMean()>440?'Acima do critério térmico':fwarn?'Acima da faixa normal':'Faixa normal do Manual';
  $('#bottomFlag').textContent=sim.tb>=370?'Atingiu critério térmico':bwarn?'Acima da faixa normal':'Faixa normal do Manual';
  $$('.kpi').forEach((e,i)=>e.classList.toggle('warn',i===0?fwarn:i===1?bwarn:(sim.level>83||sim.level<42)));
  $('#flashBar').style.width=clamp((flashMean()-330)/(470-330)*100,0,100)+'%';$('#bottomBar').style.width=clamp((sim.tb-310)/(400-310)*100,0,100)+'%';$('#levelBar').style.width=sim.level+'%';$('#clock').textContent=fmtTime(sim.elapsed);$('#overFlash').innerHTML=`${fmtTime(sim.overf)} <span>/ 05:00</span>`;$('#overBottom').innerHTML=`${fmtTime(sim.overb)} <span>/ 07:00</span>`;
  $('#diagramFlash').textContent=flashMean().toFixed(0)+' °C';$('#diagramBottom').textContent=sim.tb.toFixed(0)+' °C';$('#diagramPump').textContent=sim.jb?'B ativa':sim.ja?(sim.hydraulicFault?'A sem vazão':'A ativa'):'Sem circulação';['suctionFlow','hotFlow','heatFlow','returnFlow','bottomReturnFlow'].forEach(id=>$('#'+id).classList.toggle('stopped',!normal));$('#towerLiquid').style.opacity=(.20+sim.level/150).toFixed(2);
- renderDiagnostics();renderLevelBalance();$('#hvVal').textContent=sim.hv+'%';$('#loadVal').textContent=sim.load+'%';$('#loadSlider').value=sim.load;$('#hvSlider').value=sim.hv;$('#pumpoutCheck').checked=sim.pumpout;$('#hvAvailable').checked=sim.hvAvailable;
+ renderDiagnostics();renderLevelBalance();$('#hvVal').textContent=sim.hv+'%';$('#loadVal').textContent=sim.load+'%';$('#loadSlider').value=sim.load;$('#hvSlider').value=sim.hv;$('#pumpoutCheck').checked=sim.pumpout;$('#hvAvailable').checked=sim.hvAvailable;$('#hvEffectiveVal').textContent=(sim.hvEffective*100).toFixed(0)+'%';$('#j3912Btn').textContent=sim.j3912Running?'Simular parada J-3912':'Restabelecer J-3912 (somente modelo)';$('#j3912State').textContent=sim.j3912Running?'Operando (hipótese)':'Parada (simulada)';$('#residualFlowCheck').checked=sim.residualFlow;$('#fv39164bSlider').value=sim.fv39164b;$('#fv39164bVal').textContent=sim.fv39164b+'%';$('#lv39152Slider').value=sim.lv39152;$('#lv39152Val').textContent=sim.lv39152+'%';
  drawTrend();drawLevelTrend()
 }
 function renderLevelBalance(){
@@ -140,8 +138,8 @@ function renderLevelBalance(){
  $('#balanceOutput').textContent='−'+f(b.output);
  $('#balanceNet').textContent=(b.net>0?'+':'')+f(b.net);
  $('#balanceNet').className=b.net<-.02?'balance-neg':b.net>.02?'balance-pos':'balance-neutral';
- $('#balanceDirection').textContent=b.net<-.02?'↘ Tendência hipotética: nível caindo':b.net>.02?'↗ Tendência hipotética: nível subindo':'→ Tendência hipotética: próximo do equilíbrio';
- $('#balanceExplain').textContent='Condensação: '+f(b.condensation)+' · HV (se adicionar inventário): '+f(b.externalHV)+' · vaporização: '+f(b.evaporation)+' · retirada via J-3912: '+f(b.product)+' · pumpout: '+f(b.pumpout)+'. Valores ilustrativos em pontos percentuais de nível/min, não m³/h.';
+ $('#balanceDirection').textContent=b.net<-.45?'↘ Queda acentuada (hipótese)':b.net<-.16?'↘ Queda desacelerando (hipótese)':b.net<-.025?'↘ Redução lenta · aproximação de patamar':'→ Tendência próxima da estabilização; sem recuperação garantida';
+ $('#balanceExplain').textContent='Condensação: '+f(b.condensation)+' · vaporização: '+f(b.evaporation)+' · retirada residual simulada via J-3912/FV/LV: '+f(b.product)+' · pumpout: '+f(b.pumpout)+' · HV efetiva: '+f(b.hvEffective*100)+'%. A HV reduz prioritariamente a temperatura e a vaporização, sem entrada direta de massa presumida. Todas as taxas são ilustrativas em p.p./min.';
 }
 function drawLevelTrend(){
  const arr=sim.history;if(!arr.length)return;
@@ -191,6 +189,14 @@ $('#runBtn').addEventListener('click',()=>{if(interval){clearInterval(interval);
 $('#faultBtn').addEventListener('click',()=>{if(sim.incident){showToast('A falha já foi simulada. Use reiniciar para novo cenário.');return}sim.jb=false;sim.ja=false;sim.incident=true;log('Trip simulado da J-3911B; J-3911A não assumiu. Queda da circulação de borra.','danger');updateView()});
 $('#resetBtn').addEventListener('click',()=>{sim=initialState();clearInterval(interval);interval=null;$('#runBtn').textContent='▶ Iniciar tempo';$('#aSelect').value='nao';$('#sensorChoice').value='0';$('#simLog').innerHTML='';updateView()});
 $('#startABtn').addEventListener('click',()=>{if(!sim.incident){showToast('Simule primeiro a perda da J-3911B.');return}if(sim.trip){showToast('Após trip, a entrada de bomba exige lógica própria; reinicie este modelo comparativo.');return}if($('#aSelect').value==='sim'){sim.ja=true;sim.recovered=!sim.hydraulicFault;log(sim.hydraulicFault?'J-3911A acionada, porém sem circulação efetiva no cenário hidráulico.':'J-3911A acionada e circulação fictícia restabelecida.');}else{sim.ja=false;log('Tentativa fictícia sem sucesso. Mantida a perda total de circulação.','danger')}updateView()});
+// Comandos didáticos distintos: o efeito no LIC-39152 depende de retirada
+// residual REAL pela mesma rota. Não assumir vazões sem validar P&ID.
+$('#j3912Btn').addEventListener('click',()=>{sim.j3912Running=!sim.j3912Running;log(sim.j3912Running?'J-3912 recolocada no cenário de treinamento (sem sequência de partida real).':'J-3912 parada no modelo: reduz retirada residual SE a rota mantinha vazão.');updateView()});
+$('#fv39164bSlider').addEventListener('input',e=>{sim.fv39164b=+e.target.value;updateView()});
+$('#fv39164bSlider').addEventListener('change',()=>log('FV-39164B simulada em '+sim.fv39164b+'%: efeito sobre retirada residual, condicionado à comunicação hidráulica.'));
+$('#lv39152Slider').addEventListener('input',e=>{sim.lv39152=+e.target.value;updateView()});
+$('#lv39152Slider').addEventListener('change',()=>log('LV-39152 simulada em '+sim.lv39152+'%: influência independente de instrumento, dependente do caminho de retirada real.'));
+$('#residualFlowCheck').addEventListener('change',e=>{sim.residualFlow=e.target.checked;log(sim.residualFlow?'Hipótese de retirada residual ativa pela J-3912.':'Sem vazão residual disponível: comandos J-3912/FV/LV deixam de afetar o nível neste modelo.');updateView()});
 $('#hvSlider').addEventListener('input',e=>{sim.hv=+e.target.value;updateView()});$('#hvSlider').addEventListener('change',()=>log(`HV-39157 simulada em ${sim.hv}%; resultado condicionado à disponibilidade hipotética da rota.`));
 $('#loadSlider').addEventListener('input',e=>{if(sim.chargeStopped||sim.trip){showToast('Carga interrompida neste cenário; reinicie para restaurar.');updateView();return}sim.load=+e.target.value;updateView()});$('#loadSlider').addEventListener('change',()=>log(`Carga relativa ajustada em ${sim.load}% (treinamento).`));
 $('#hvAvailable').addEventListener('change',e=>{sim.hvAvailable=e.target.checked;log(sim.hvAvailable?'Rota alternativa hipotética disponível.':'Rota alternativa hipotética indisponível.');updateView()});
@@ -203,7 +209,7 @@ window.addEventListener('resize',()=>drawTrend());
 const cases=[
  {name:'Caso A · Perda total',stages:[
  {title:'Parada da bomba em operação',narrative:'Às 02:14 a J-3911B desarma. A J-3911A, selecionada para reserva, não estabelece vazão. FIC-39162 e FIC-39163 caem, mas a TIC-39186 ainda permanece próxima do valor anterior.',telemetry:['TIC-39186 407 °C →','TIC-39180 348 °C →','FIC-39162 queda acentuada','J-3911A/B sem vazão'],question:'Qual conjunto inicial de evidências confirma a perda funcional da circulação?',choices:['Confrontar status, vazões de retorno e pressão diferencial.', 'Usar temperatura estável como prova de que a circulação ainda está presente.', 'Interpretar pressão de descarga como prova de vazão nos retornos.'],correct:0,feedback:'A dinâmica térmica tem inércia; a perda hidráulica aparece antes das temperaturas. Verificar vazões, pressão diferencial e condição de acionamento.'},
- {title:'A temperatura começa a reagir',narrative:'Cinco minutos depois, a zona de flash acelera; o refluxo de borra não voltou e foi solicitado refluxo alternativo pela HV-39157. O LIC-39152 entra em queda por perda de condensação e aumento da vaporização.',telemetry:['TIC-39186 427 °C ↗','TIC-39180 360 °C ↗','HV-39157 aberta','LIC-39152 57% ↘ 47%'],question:'O que demonstra que a alternativa está efetivamente contribuindo?',choices:['A HV-39157 em abertura elevada, com nível de fundo ainda estável.', 'A estabilização conjunta das temperaturas e vazão confirmada.', 'O nível de fundo normal junto com o comando de refluxo alternativo.'],correct:1,feedback:'Abertura da válvula não garante vazão efetiva. A confirmação exige evidências coerentes de fluxo, temperaturas e inventário.'},
+ {title:'A temperatura começa a reagir',narrative:'Cinco minutos depois, a zona de flash acelera; o refluxo de borra não voltou e foi solicitado refluxo alternativo pela HV-39157. O LIC-39152 entra em queda por perda de condensação e aumento da vaporização.',telemetry:['TIC-39186 427 °C ↗','TIC-39180 360 °C ↗','HV-39157 aberta','LIC-39152 57% ↘ (tendência)'],question:'O que demonstra que a alternativa está efetivamente contribuindo?',choices:['A HV-39157 em abertura elevada, com nível de fundo ainda estável.', 'A estabilização conjunta das temperaturas e vazão confirmada.', 'O nível de fundo normal junto com o comando de refluxo alternativo.'],correct:1,feedback:'Abertura da válvula não garante vazão efetiva. A confirmação exige evidências coerentes de fluxo, temperaturas e inventário.'},
  {title:'A janela de decisão se estreita',narrative:'A temperatura da zona de flash sobe apesar da tentativa de resfriamento e a bomba reserva continua indisponível. Os critérios do procedimento se aproximam.',telemetry:['TIC-39186 437 °C ↗','TIC-39180 367 °C ↗','J-3911A/B indisponíveis','Sem retorno efetivo'],question:'Qual orientação é compatível com o procedimento fotografado?',choices:['Aguardar cumprir integralmente os dois tempos previstos.', 'Manter carga normal até confirmar a proteção automática do conversor pelo SDCD.', 'Executar retirada coordenada de carga conforme procedimento.'],correct:2,feedback:'Os tempos não são licença para manter a unidade aquecendo. O procedimento prevê interromper a carga quando a recuperação falha e os critérios se aproximam.'},
  {title:'Trip parcial e proteção associada',narrative:'A retirada de carga é iniciada. O conversor entra em condição de trip parcial, enquanto ocorre a reconfiguração do compressor de gás e dos caminhos de catalisador.',telemetry:['J-3903A/B em retirada','L-3901/L-3902 comandadas','J-3902 em procedimento','D-3904 sob controle de pressão'],question:'O que deve orientar a verificação da sequência?',choices:['Matriz de intertravamento, posições reais e pressões diferenciais.', 'Fechamento simultâneo forçado de todas as válvulas do processo.', 'Comprovar apenas o estado de parada das bombas, mantendo as demais verificações para o campo.'],correct:0,feedback:'A ordem depende da lógica validada e das pressões/selagens. A posição comandada não equivale sempre à posição comprovada.'}
  ]},
@@ -216,8 +222,14 @@ const cases=[
  {name:'Caso C · Instabilidade térmica',stages:[
  {title:'Refluxo alternativo insuficiente',narrative:'A HV-39157 está aberta, mas a temperatura não estabiliza. Há entrada de carga ao conversor e o fundo começa a acumular energia.',telemetry:['TIC-39186 434 °C ↗','TIC-39180 364 °C ↗','HV aberta','Sem J-3911A/B'],question:'Qual é a limitação central da alternativa?',choices:['Abertura de válvula não assegura vazão ou capacidade térmica.', 'A HV em abertura máxima substitui o refluxo integral de borra.', 'O nível do fundo normal comprova capacidade de resfriamento.'],correct:0,feedback:'O efeito depende da origem, vazão efetiva, temperatura e destino da corrente alternativa.'},
  {title:'Leituras com defasagem',narrative:'A TIC-39186 aproxima-se do critério antes da TIC-39180. Operadores observam a diferença entre as taxas de aquecimento.',telemetry:['Flash 439 °C ↗','Fundo 366 °C ↗','Retorno superior baixo','Retorno inferior baixo'],question:'Como interpretar a defasagem?',choices:['Ela invalida a medição do fundo e permite ignorá-la.', 'As regiões têm respostas térmicas e inventários distintos.', 'O fundo será sempre protegido se o flash subir antes.'],correct:1,feedback:'A geometria, massa retida e condições de troca de calor determinam taxas distintas. Monitorar ambos, independentemente.'},
- {title:'Queda rápida do LIC-39152',narrative:'Com ambos os refluxos perdidos, mais frações pesadas continuam na fase vapor e o líquido quente do fundo deixa de ser resfriado. O LIC-39152 cai de forma acentuada no cenário operacional da U-39.',telemetry:['LIC-39152 57% ↘ 38%','TIC-39180 368 °C ↗','J-3911A/B sem vazão','FIC-39162/63 sem retorno'],question:'Que mecanismo explica melhor a queda simultânea do nível e a elevação térmica?',choices:['A parada da sucção da J-3911 retira massa líquida acumulada, mesmo sem escoamento.', 'A ausência do refluxo reduz condensação e intensifica vaporização do líquido do fundo.', 'O bloqueio de saída do óleo decantado força queda direta do nível medido.'],correct:1,feedback:'A circulação interna se cancela no balanço líquido quando está íntegra. O mecanismo dominante descrito para essa falha é a perda de condensação nas chicanas e aumento da vaporização, reduzindo o inventário de fundo.'},
+ {title:'Queda rápida do LIC-39152',narrative:'Com ambos os refluxos perdidos, mais frações pesadas continuam na fase vapor e o líquido quente do fundo deixa de ser resfriado. O LIC-39152 cai de forma acentuada no cenário operacional da U-39.',telemetry:['LIC-39152 em redução progressiva','TIC-39180 368 °C ↗','J-3911A/B sem vazão','FIC-39162/63 sem retorno'],question:'Que mecanismo explica melhor a queda simultânea do nível e a elevação térmica?',choices:['A parada da sucção da J-3911 retira massa líquida acumulada, mesmo sem escoamento.', 'A ausência do refluxo reduz condensação e intensifica vaporização do líquido do fundo.', 'O bloqueio de saída do óleo decantado força queda direta do nível medido.'],correct:1,feedback:'A circulação interna se cancela no balanço líquido quando está íntegra. O mecanismo dominante descrito para essa falha é a perda de condensação nas chicanas e aumento da vaporização, reduzindo o inventário de fundo.'},
  {title:'Consequências energéticas',narrative:'Com a carga retirada, as correntes térmicas do processo mudam. Os catcoolers e a GV-3901 precisam de configuração apropriada para o novo regime.',telemetry:['Conversor em trip parcial','Gás de combustão redirecionado','Vapor catcooler em desvio','GV-3901 sob permissivos'],question:'Qual verificação tem maior abrangência?',choices:['Reconciliar permissivos de queima, vapor e pressão do sistema.', 'Manter a recuperação térmica nominal a qualquer custo.', 'Ignorar as proteções da caldeira durante o desvio.'],correct:0,feedback:'O circuito energético integra combustão, geração de vapor, alívio e pressão; os permissivos de equipamentos permanecem essenciais.'}
+ ]},
+ {name:'Caso D · Contenção do nível',stages:[
+ {title:'Nível e temperatura entram em desvio',narrative:'Sem circulação pelas J-3911A/B, o LIC-39152 começa a cair e o TIC-39186 sobe. A HV-39157 é representada como disponível, mas sua resposta não é imediata.',telemetry:['LIC-39152 57% ↘','TIC-39186 417 °C ↗','TIC-39180 356 °C ↗','FIC-39162/63 sem retorno'],question:'Qual finalidade principal se deseja observar na resposta da HV-39157?',choices:['Recuperar imediatamente a circulação superior de borra da J-3911.', 'Reduzir a taxa de aquecimento e limitar efeitos térmicos no fundo.', 'Estabelecer a produção nominal de óleo decantado pela J-3912.'],correct:1,feedback:'O objetivo prioritário descrito é conter a elevação térmica. Redução da perda de nível seria consequência indireta, não garantia de reposição.'},
+ {title:'A vazão residual precisa ser demonstrada',narrative:'Mesmo após a J-3911 parar, aparece indicação de retirada associada ao circuito de óleo decantado. O cenário permite avaliar as hipóteses de J-3912, FV-39164B e LV-39152.',telemetry:['J-3912 indicada ligada','Retirada residual a confirmar','LIC-39152 continua ↘','HV em modulação gradual'],question:'O que deve ser determinado antes de atribuir efeito às ações sobre J-3912, FV e LV?',choices:['Se existe vazão residual real e se as válvulas atuam na rota relevante.', 'Apenas a condição elétrica da J-3912, independentemente da sucção.', 'Somente os comandos das válvulas, sem confronto com o balanço do fundo.'],correct:0,feedback:'Sem confirmar a rota hidráulica e a vazão, a manobra pode não mudar o inventário. O modelo oferece chave para habilitar/desabilitar a hipótese.'},
+ {title:'A queda do nível desacelera',narrative:'O exercício representa menor retirada residual após restringir a rota de saída. A queda do LIC-39152 desacelera, mas as temperaturas ainda apresentam risco e os refluxos normais não retornaram.',telemetry:['LIC-39152: declive menor','TIC-39186: não estabilizou','J-3911A/B indisponíveis','FIC-39162/63 sem vazão'],question:'Que interpretação impede declarar o problema resolvido?',choices:['A estabilização do nível restaura automaticamente o sub-resfriamento da borra.', 'Reduzir a retirada garante que a conversão continue em carga nominal.', 'Menor queda do nível não confirma controle térmico nem refluxo de borra.'],correct:2,feedback:'Pode-se preservar temporariamente inventário sem eliminar a entrada de calor ou restabelecer lavagem/recirculação.'},
+ {title:'Limite das medidas paliativas',narrative:'A HV promove resposta térmica lenta, enquanto a retirada residual diminui. O nível se aproxima de uma condição menos instável no modelo, sem previsão confiável de nível mínimo ou tempo de segurança.',telemetry:['TIC-39186: tendência reavaliada','TIC-39180: tendência reavaliada','LIC-39152: queda atenuada','Critérios térmicos independentes'],question:'Qual é o enquadramento técnico para a tomada de decisão do CIC?',choices:['Considerar o nível estabilizado autorização para manter carga indefinidamente.', 'Preservar as medidas documentais de proteção e verificar limites térmicos.', 'Ignorar temperatura se a FV-39164B e a LV-39152 estiverem fechadas.'],correct:1,feedback:'Ações de contenção são temporárias; diagnóstico conjunto e procedimento vigente continuam prioritários, sem usar nível estável como licença operacional.'}
  ]}
 ];
 let scenarioIndex=0,stageIndex=0,scenarioHistory=[],scenarioSeverity=0,scenarioAnswered=false;
@@ -243,8 +255,10 @@ const questions=[
 {q:'Qual aspecto da curva H bomba versus H sistema ajuda a interpretar vazão nula com acionamento ligado?',a:['A operação depende da interseção das curvas e pode ser anulada por problemas hidráulicos.', 'A rotação nominal assegura a vazão contratual independentemente do circuito conectado.', 'O diferencial elevado de pressão confirma que os dois retornos da fracionadora recebem borra em quantidade nominal.'],ok:0,why:'Perdas, obstruções, cavitação e alinhamentos deslocam o ponto de operação.'},
 {q:'A redução do retorno superior FIC-39162 afeta primeiramente qual conjunto de funções?',a:['Controle do nível do tambor de topo e condensação completa do gás úmido.', 'Lavagem de partículas, contato gás-líquido e remoção de calor na seção de chicanas.', 'Retorno dos gases de regeneração e controle da entrada de ar no catcooler.'],ok:1,why:'O FIC-39162 regula o circuito superior de refluxo de borra à E-3901.'},
 {q:'A redução de FIC-39163 prejudica de forma especial:',a:['A retirada de calor na região de contato dos vapores com refluxo superior.', 'A redução automática da temperatura do óleo decantado após o C-3929.', 'A homogeneização e o sub-resfriamento do líquido acumulado no fundo.'],ok:2,why:'O Manual descreve o retorno inferior como proteção do inventário pesado.'},
-{q:'O fundo indica elevação de nível depois da falha J-3911A/B. Qual análise é necessária?',a:['Comparar entradas, saídas, vaporização e possíveis rotas de retirada do inventário.', 'Supor que o nível sempre sobe, pois a bomba de circulação não pode afetar massa.', 'Interpretar o crescimento do nível como prova de circulação suficiente de borra para refrigerar o sistema.'],ok:0,why:'Sem balanço de massa não se infere nível a partir do estado da bomba.'},
+{q:'Após a falha J-3911A/B, parar J-3912 ou restringir FV/LV pode atenuar a queda do LIC-39152. O que é necessário confirmar?',a:['Se ainda existe vazão de retirada nessa rota e se o efeito aparece nas tendências.', 'Apenas a posição comandada das válvulas, independentemente da vazão real.', 'Que a HV-39157 automaticamente recupera os refluxos da J-3911 sem bombeamento.'],ok:0,why:'O efeito depende da retirada residual real. Estabilização momentânea do nível não comprova solução térmica nem circulação normal.'},
 {q:'Na reconfiguração da GV-3901 e catcoolers, qual monitoramento integra melhor as condições?',a:['Monitorar somente temperatura da borra e posição da válvula de refluxo de nafta.', 'Verificar rotas dos gases, permissivos da caldeira, pressão e destino do vapor.', 'Usar o estado do compressor de gás para assumir que todos os serviços estão normais.'],ok:1,why:'Integração de combustão e vapor exige confirmação de todos os sistemas envolvidos.'},
+{q:'Após injeção gradual pela HV-39157, o nível cai mais lentamente, mas FIC-39162/63 não retornam. Qual conclusão é tecnicamente sustentada?',a:['A HV comprovou recuperação integral da circulação e da lavagem pelas chicanas.', 'A HV pode atenuar o desequilíbrio térmico sem recuperar os refluxos normais.', 'A tendência do nível comprova funcionamento pleno da J-3911A/B.'],ok:1,why:'A contenção pela HV é temporária e prioritariamente térmica. A recuperação de refluxos precisa de vazão verificada.'},
+{q:'O modelo vincula J-3912, FV-39164B e LV-39152 à retirada residual. O que justifica tratar esse vínculo como hipótese?',a:['A circulação de borra necessariamente sustenta as três vazões em série.', 'As posições de todas as válvulas mostram diretamente a massa retirada.', 'A rota hidráulica real e a vazão remanescente exigem P&ID e verificação.'],ok:2,why:'O circuito da LV e da FV deve ser confirmado; o modelo não reproduz uma matriz de intertravamentos real.'},
 {q:'Quais itens do procedimento precisam ser revistos antes de usá-lo como instrução executável?',a:['Somente as cores dos alarmes e o texto de descrição no SDCD da época.', 'Somente as válvulas de refluxo de borra e a potência elétrica do motor reserva.', 'Revisão vigente, P&IDs, permissivos, causa e efeito e rotas de parada aplicáveis.'],ok:2,why:'O modelo preserva a imagem histórica; não substitui procedimentos autorizados.'}
 ];
 let quiz=[],qindex=0,score=0,answered=false;

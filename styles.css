@@ -68,3 +68,12 @@ body.light .balance-neg{color:#ad4d37}body.light .balance-pos{color:#087462}body
 .balance-selector{border:1px solid var(--edge);border-radius:10px;padding:12px 13px;line-height:1.6;color:var(--muted);font-size:13px}
 .balance-selector strong{color:var(--text)}
 .balance-selector .micro-label{display:block;margin-top:8px;letter-spacing:.04em}
+
+/* V2.3 · controles de inventário, otimização mobile */
+.action-control .row-split{align-items:center;flex-wrap:wrap;gap:9px}
+.action-control .row-split .btn{white-space:normal;max-width:100%;flex-shrink:0}
+.action-control .micro-help{overflow-wrap:anywhere;max-width:100%;margin-top:9px}
+.action-control input[type="range"]{width:100%;min-width:0;accent-color:var(--teal)}
+.action-control .toggle-line{align-items:flex-start}
+.balance-direction{overflow-wrap:anywhere}
+@media(max-width:560px){.actions-card .action-grid{grid-template-columns:1fr!important}.actions-card .action-control{min-width:0}.action-control .row-split .btn{width:100%;}.balance-readouts>div strong{overflow-wrap:anywhere;font-size:clamp(15px,5vw,22px)}}

@@ -1,6 +1,6 @@
 # U-39 — Falha simultânea da J-3911A/B | Análise técnica do procedimento
 
-**Edição:** Análise revisada para Concept V2.2, 22/10/2026. **Base documental:** imagem original do procedimento de 13 ações enviada para análise; Manual da Unidade 39, seção 8.7.2.1 (páginas 51–52), seção de integração de vapor (página 90), quadro de controle (página 136), descrições complementares (páginas 55, 56, 58, 59, 61 e 144).
+**Edição:** Análise revisada para Concept V2.3, 23/10/2026. **Base documental:** imagem original do procedimento de 13 ações enviada para análise; Manual da Unidade 39, seção 8.7.2.1 (páginas 51–52), seção de integração de vapor (página 90), quadro de controle (página 136), descrições complementares (páginas 55, 56, 58, 59, 61 e 144).
 
 ## 1. Situação iniciadora
 
@@ -97,3 +97,14 @@ O simulador V2.2 representa essa tendência de queda qualitativamente; seus valo
 ## 6. Alcance da Concept
 
 A Concept contém modelos de tendência empíricos e simplificados destinados a demonstrar *relações qualitativas*. Não reproduz equações de balanço da planta calibradas, parâmetros reais de troca térmica, níveis de disparo de instrumentação, condição de inventário, matriz de intertravamento ou tempos reais de resposta. As simulações não podem fundamentar decisões reais de operação.
+
+
+## Complemento — refinamento V2.3 do balanço do LIC-39152
+
+A queda abrupta observada no cenário de perda simultânea das J-3911A/B não deve ser confundida com queda ilimitada e de taxa constante no modelo. A perda da circulação reduz molhamento, condensação de pesados e remoção de calor, favorecendo a subida das temperaturas TIC-39186/TIC-39180 e a diminuição do inventário do fundo. Medidas de contenção podem atenuar a taxa de queda sem recompor o refluxo superior e inferior.
+
+**HV-39157:** de acordo com o procedimento fotográfico, é recurso alternativo para tentar conter o descontrole térmico. Na Concept sua influência sobre o LIC-39152 ocorre *indiretamente*, via moderação da vaporização e favorecimento de condensação. O comando não equivale à vazão medida, e não foram inferidas adição líquida direta nem capacidade térmica real.
+
+**J-3912 / FV-39164B / LV-39152:** a redução de retirada de líquido só modifica o balanço se alguma vazão continuar disponível. A alimentação da J-3912 descrita no Manual depende do circuito a jusante de C-3933; com a J-3911 parada, não se deve presumir disponibilidade de sucção nem independência das três limitações de vazão. A simulação oferece explicitamente essa hipótese, calcula uma única saída residual e permite desligá-la. Quando indisponível, os três controles de retirada não afetam o nível no modelo.
+
+A resposta pedagógica procurada é: **queda inicial → redução do declive após intervenções hipotéticas → eventual aproximação de uma condição de menor variação**, sem recuperação de nível e sem assegurar condição térmica segura. Os parâmetros são normalizações didáticas, não taxas previstas para o SDCD. A análise de aplicações reais exige P&ID vigente, tendências históricas e critérios de intertravamento da unidade.

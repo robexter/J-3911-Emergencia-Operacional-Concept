@@ -29,3 +29,16 @@
 - Controles existentes de HV-39157, parada de carga e pumpout afetam a tendência com parâmetros ilustrativos.
 - Corrigidos os cenários CIC que mostravam LIC-39152 em elevação e revisadas opções/feedback.
 - As 13 ações do procedimento original permanecem integrais.
+
+
+## V2.3 — 23/10/2026 · Refinamento baseado no comentário operacional
+
+1. Nível não despenca de forma tão rápida: reequilibrado o balanço ilustrativo do inventário, com perda progressivamente menor quando resta menos líquido disponível.
+2. HV-39157 atua com atraso e reduz prioritariamente o avanço das temperaturas de flash e fundo; efeito secundário na perda por vaporização, sem injeção de massa presumida.
+3. Controles independentes para ação simulada na J-3912, FV-39164B e LV-39152, condicionados à existência de retirada residual efetiva pela rota do produto.
+4. Chave de hipótese hidráulica disponível para demonstrar ausência de efeito das ações quando não há vazão para retirar.
+5. Exibido saldo de entradas/saídas e tendência de nível após cada intervenção, sem declarar recuperação nem criar um valor mínimo seguro fictício.
+6. Cenário D com decisões encadeadas; avaliação aumentada para 18 perguntas.
+7. V2.2 preservada; atualizado identificador do cache da PWA e responsividade dos novos controles mobile.
+
+**Não validado:** abertura de LV-39152 / FV-39164B e dependência com J-3912; resposta real HV-39157; taxas numéricas de nível/temperatura. Nenhuma dessas hipóteses é sequência operacional aprovada.
