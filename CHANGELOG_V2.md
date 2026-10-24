@@ -41,4 +41,4 @@
 6. Cenário D com decisões encadeadas; avaliação aumentada para 18 perguntas.
 7. V2.2 preservada; atualizado identificador do cache da PWA e responsividade dos novos controles mobile.
 
-**Não validado:** abertura de LV-39152 / FV-39164B e dependência com J-3912; resposta real HV-39157; taxas numéricas de nível/temperatura. Nenhuma dessas hipóteses é sequência operacional aprovada.
+**Não validado:** abertura de LV-39152 / FV-39164B e dependência com J-3912; resposta real HV-39157; taxas numéricas de nível/temperatura.
